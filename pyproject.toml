@@ -1,12 +1,13 @@
 [project]
 name = "deep-agent-template"
 version = "0.1.0"
-description = "Opinionated Deep Agent template for LangSmith/LangGraph deployment"
+description = "Deep Agent template for LangSmith/LangGraph deployment"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "deepagents>=0.4.0",
     "langgraph>=1.0.0",
+    "httpx>=0.27",
     "python-dotenv>=1.0.1",
 ]
 
@@ -24,4 +25,4 @@ dev = [
 
 [tool.uv.build-backend]
 module-name = "deep_agent"
-source-include = ["langgraph.json", ".env.example", "Makefile", "tests/**"]
+source-include = ["langgraph.json", ".env.example", "Makefile"]

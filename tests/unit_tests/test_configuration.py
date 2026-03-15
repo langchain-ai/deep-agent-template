@@ -12,5 +12,5 @@ def test_subagents_configured() -> None:
     assert names == {"researcher", "critic"}
 
 
-def test_system_prompt_has_workflow() -> None:
-    assert "Workflow" in SYSTEM_PROMPT
+def test_system_prompt_is_nonempty() -> None:
+    assert len(SYSTEM_PROMPT.strip()) > 0

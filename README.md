@@ -1,41 +1,39 @@
-# Deep Agent Template (Opinionated)
+# Deep Agents Template
 
-Opinionated deployment template for a Deep Agent built with `create_deep_agent(...)`.
+Deployment template for a deep agent built with `create_deep_agent(...)`.
 
 ## What this template gives you
 
-- A deployable Deep Agent graph at `src/deep_agent/graph.py`.
+- A deployable deep agent graph at `src/deep_agent/graph.py`.
 - Explicit workflow prompt (plan, delegate, critique, finalize).
-- Two predefined subagents (`researcher`, `critic`).
+- Two predefined sub-agents (`researcher`, `critic`).
 - Human-in-the-loop interrupts on `execute` and `write_file`.
 - A `uv`-managed local workflow with a small `Makefile` wrapper and starter tests.
 
 ## Quickstart
 
-1. Sync the project with `uv`:
+1. Sync the project and configure environment:
 
 ```bash
 uv sync
-```
-
-2. Configure environment:
-
-```bash
 cp .env.example .env
 ```
 
-3. Run locally:
+2. Start the dev server:
 
 ```bash
 uv run langgraph dev
 ```
 
-Optional `make` wrappers:
+3. Deploy to LangSmith:
 
 ```bash
-make dev
-make run
+uv run langgraph deploy
 ```
+
+See the [CLI docs](https://docs.langchain.com/langsmith/cli#deploy) for deploy options.
+
+To set up CI instead, push this repo to GitHub and configure your deployment through the LangSmith UI.
 
 ## Tests and lint
 
@@ -48,15 +46,8 @@ make format
 
 Integration tests are skipped unless `ANTHROPIC_API_KEY` is set.
 
-## Deploy to LangSmith
-
-1. Push this template to a Git repository.
-2. In LangSmith, create a new Deployment from that repo.
-3. Set environment variables for your selected model provider and optional tracing key.
-4. Deploy using the provided `langgraph.json`.
-
 ## Reference docs
 
 - Deep Agents overview: https://docs.langchain.com/oss/python/deepagents/overview
 - Deep Agents quickstart: https://docs.langchain.com/oss/python/deepagents/quickstart
-- LangGraph deployment in LangSmith: https://docs.langchain.com/oss/python/langchain/deploy
+- LangSmith CLI: https://docs.langchain.com/langsmith/cli

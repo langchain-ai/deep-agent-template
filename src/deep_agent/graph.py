@@ -1,26 +1,32 @@
-"""Opinionated Deep Agent graph for deployment."""
+"""Deep Agent graph for deployment."""
 
 from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
 
+import httpx
 from deepagents import create_deep_agent
 from langchain_core.tools import tool
 
 DEFAULT_MODEL = os.getenv("DEEP_AGENT_MODEL", "anthropic:claude-sonnet-4-6")
 
-SYSTEM_PROMPT = """
-You are a rigorous execution-focused deep agent.
+_http_client = httpx.AsyncClient(
+    headers={"User-Agent": "deep-agent/0.1"},
+    timeout=10,
+    follow_redirects=True,
+)
 
-Workflow you must follow:
+SYSTEM_PROMPT = """
+You are a deep agent.
+
+Workflow:
 1. Write and maintain a todo list for non-trivial requests.
 2. Delegate focused fact-finding to subagents when helpful.
 3. Store intermediate drafts in files when the task is long.
-4. Before finalizing, run a brief internal critique for risks, gaps, and missing constraints.
-5. Return concise, actionable final output.
+4. Before finalizing, critique your work for risks, gaps, and missing constraints.
+5. Return concise, actionable output.
 
-Quality bar:
 - Prefer concrete evidence over assumptions.
 - State unresolved uncertainty explicitly.
 - Keep output compact unless the user asks for depth.
@@ -34,15 +40,20 @@ def utc_now() -> str:
 
 
 @tool
-def confidence_check(claim: str, confidence: float) -> str:
-    """Force explicit confidence scoring for key claims.
+async def web_fetch(url: str) -> str:
+    """Fetch a URL and return its body as text.
 
     Args:
-        claim: The claim being assessed.
-        confidence: Numeric confidence in [0, 1].
+        url: The URL to fetch (must be http or https).
     """
-    bounded = min(max(confidence, 0.0), 1.0)
-    return f"claim={claim!r}; confidence={bounded:.2f}"
+    if not url.startswith(("http://", "https://")):
+        return "Error: URL must start with http:// or https://"
+    try:
+        resp = await _http_client.get(url)
+        resp.raise_for_status()
+        return resp.text[:50_000]
+    except httpx.HTTPError as exc:
+        return f"Error fetching {url}: {exc}"
 
 
 SUBAGENTS = [
@@ -53,7 +64,7 @@ SUBAGENTS = [
             "You are a focused researcher. Gather evidence, list assumptions, and "
             "report contradictions clearly."
         ),
-        "tools": [utc_now, confidence_check],
+        "tools": [utc_now, web_fetch],
     },
     {
         "name": "critic",
@@ -62,19 +73,19 @@ SUBAGENTS = [
             "You are a critical reviewer. Find weak logic, untested assumptions, and "
             "missing constraints."
         ),
-        "tools": [confidence_check],
+        "tools": [utc_now],
     },
 ]
 
 
 graph = create_deep_agent(
     model=DEFAULT_MODEL,
-    tools=[utc_now, confidence_check],
+    tools=[utc_now, web_fetch],
     system_prompt=SYSTEM_PROMPT,
     subagents=SUBAGENTS,
     interrupt_on={
         "execute": True,
         "write_file": True,
     },
-    name="opinionated_deep_agent",
+    name="deep_agent",
 )

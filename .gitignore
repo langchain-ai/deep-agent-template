@@ -8,4 +8,6 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+.langgraph_api/
 .DS_Store
+.claude/
