@@ -10,6 +10,11 @@ Deployment template for a deep agent built with `create_deep_agent(...)`.
 - Human-in-the-loop interrupts on `execute` and `write_file`.
 - A `uv`-managed local workflow with a small `Makefile` wrapper and starter tests.
 
+## Prerequisites
+
+- An API key for your model provider (Anthropic by default)
+- A [LangSmith](https://smith.langchain.com/) account (Plus plan or higher) to deploy
+
 ## Quickstart
 
 1. Sync the project and configure environment:
