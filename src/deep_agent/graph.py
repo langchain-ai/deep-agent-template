@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from datetime import datetime, timezone
 
-import httpx
+from langchain_core.runnables import RunnableConfig
+
 from deepagents import create_deep_agent
 from langchain_core.tools import tool
+from langgraph_sdk.runtime import ServerRuntime
+
+from deep_agent.sandbox import get_or_create_sandbox
 
 DEFAULT_MODEL = os.getenv("DEEP_AGENT_MODEL", "anthropic:claude-sonnet-4-6")
-
-_http_client = httpx.AsyncClient(
-    headers={"User-Agent": "deep-agent/0.1"},
-    timeout=10,
-    follow_redirects=True,
-)
 
 SYSTEM_PROMPT = """
 You are a deep agent.
@@ -39,23 +38,6 @@ def utc_now() -> str:
     return datetime.now(tz=timezone.utc).isoformat()
 
 
-@tool
-async def web_fetch(url: str) -> str:
-    """Fetch a URL and return its body as text.
-
-    Args:
-        url: The URL to fetch (must be http or https).
-    """
-    if not url.startswith(("http://", "https://")):
-        return "Error: URL must start with http:// or https://"
-    try:
-        resp = await _http_client.get(url)
-        resp.raise_for_status()
-        return resp.text[:50_000]
-    except httpx.HTTPError as exc:
-        return f"Error fetching {url}: {exc}"
-
-
 SUBAGENTS = [
     {
         "name": "researcher",
@@ -64,7 +46,7 @@ SUBAGENTS = [
             "You are a focused researcher. Gather evidence, list assumptions, and "
             "report contradictions clearly."
         ),
-        "tools": [utc_now, web_fetch],
+        "tools": [utc_now],
     },
     {
         "name": "critic",
@@ -78,14 +60,29 @@ SUBAGENTS = [
 ]
 
 
-graph = create_deep_agent(
-    model=DEFAULT_MODEL,
-    tools=[utc_now, web_fetch],
-    system_prompt=SYSTEM_PROMPT,
-    subagents=SUBAGENTS,
-    interrupt_on={
-        "execute": True,
-        "write_file": True,
-    },
-    name="deep_agent",
-)
+def _build_agent(backend=None):
+    return create_deep_agent(
+        model=DEFAULT_MODEL,
+        tools=[utc_now],
+        backend=backend,
+        system_prompt=SYSTEM_PROMPT,
+        subagents=SUBAGENTS,
+        # You can disable these if you want to run without interrupts
+        interrupt_on={
+            "execute": True, "write_file": True},
+        name="deep_agent",
+    )
+
+
+RO_AGENT = _build_agent()
+
+
+@contextlib.asynccontextmanager
+async def get_agent(config: RunnableConfig, runtime: ServerRuntime):
+    ert = runtime.execution_runtime
+    if ert:
+        thread_id = config.get("configurable", {}).get("thread_id", "default")
+        backend = await get_or_create_sandbox(thread_id)
+        yield _build_agent(backend=backend)
+    else:
+        yield RO_AGENT
