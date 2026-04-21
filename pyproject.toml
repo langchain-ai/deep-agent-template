@@ -8,7 +8,7 @@ dependencies = [
     "deepagents>=0.4.0",
     "langgraph>=1.0.0",
     "langgraph-sdk>=0.1.0",
-    "langsmith>=0.3.0",
+    "langsmith>=0.7.31",
     "python-dotenv>=1.0.1",
 ]
 
@@ -20,7 +20,7 @@ build-backend = "uv_build"
 dev = [
     "anyio>=4.7.0",
     "langgraph-cli[inmem]>=0.4.10",
-    "pytest>=8.3.5",
+    "pytest>=9.0.3",
     "ruff>=0.8.0",
 ]
 
