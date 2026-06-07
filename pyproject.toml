@@ -8,7 +8,7 @@ dependencies = [
     "deepagents>=0.4.0",
     "langgraph>=1.0.0",
     "langgraph-sdk>=0.1.0",
-    "langsmith>=0.7.31",
+    "langsmith>=0.8.0",
     "python-dotenv>=1.0.1",
 ]
 
