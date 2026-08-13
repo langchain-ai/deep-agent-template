@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from deep_agent.graph import graph
+from deep_agent.graph import RO_AGENT
 
 pytestmark = pytest.mark.anyio
 
@@ -13,7 +13,7 @@ if not os.getenv("ANTHROPIC_API_KEY"):
 
 
 async def test_deep_agent_smoke() -> None:
-    result = await graph.ainvoke(
+    result = await RO_AGENT.ainvoke(
         {
             "messages": [
                 {
