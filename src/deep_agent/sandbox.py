@@ -19,7 +19,7 @@ from langsmith.sandbox import AsyncSandbox, AsyncSandboxClient, ResourceNotFound
 DEFAULT_TEMPLATE_NAME = "deep-agent"
 DEFAULT_TEMPLATE_IMAGE = "python:3"
 
-_backends: dict[str, "LangSmithBackend"] = {}
+_backends: dict[str, LangSmithBackend] = {}
 
 
 class LangSmithBackend(BaseSandbox):
@@ -62,8 +62,9 @@ class LangSmithBackend(BaseSandbox):
         try:
             await self._sandbox.write(file_path, content.encode("utf-8"))
             return WriteResult(path=file_path, files_update=None)
-        except Exception as e:
-            return WriteResult(error=f"Failed to write file '{file_path}': {e}")
+        except Exception as exc:  # noqa: BLE001
+            # The backend protocol returns write failures instead of raising them.
+            return WriteResult(error=f"Failed to write file '{file_path}': {exc}")
 
     def download_files(self, paths: list[str]) -> list[FileDownloadResponse]:
         raise NotImplementedError("Use adownload_files()")
