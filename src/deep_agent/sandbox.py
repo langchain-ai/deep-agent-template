@@ -14,10 +14,11 @@ from deepagents.backends.protocol import (
     WriteResult,
 )
 from deepagents.backends.sandbox import BaseSandbox
-from langsmith.sandbox import AsyncSandbox, AsyncSandboxClient, ResourceNotFoundError
+from langsmith.sandbox import AsyncSandbox, AsyncSandboxClient
 
 DEFAULT_TEMPLATE_NAME = "deep-agent"
 DEFAULT_TEMPLATE_IMAGE = "python:3"
+DEFAULT_TEMPLATE_FS_CAPACITY = 16 * 1024**3
 
 _backends: dict[str, LangSmithBackend] = {}
 
@@ -61,7 +62,7 @@ class LangSmithBackend(BaseSandbox):
     async def awrite(self, file_path: str, content: str) -> WriteResult:
         try:
             await self._sandbox.write(file_path, content.encode("utf-8"))
-            return WriteResult(path=file_path, files_update=None)
+            return WriteResult(path=file_path)
         except Exception as exc:  # noqa: BLE001
             # The backend protocol returns write failures instead of raising them.
             return WriteResult(error=f"Failed to write file '{file_path}': {exc}")
@@ -104,7 +105,7 @@ async def get_or_create_sandbox(thread_id: str) -> LangSmithBackend:
 
     client = AsyncSandboxClient(api_key=api_key)
     await _ensure_template(client, template_name, template_image)
-    sandbox = await client.create_sandbox(template_name=template_name, timeout=180)
+    sandbox = await client.create_sandbox(snapshot_name=template_name, timeout=180)
 
     backend = LangSmithBackend(sandbox)
     _backends[thread_id] = backend
@@ -116,10 +117,18 @@ async def _ensure_template(
     template_name: str,
     template_image: str,
 ) -> None:
-    """Ensure the sandbox template exists, creating it if needed."""
-    try:
-        await client.get_template(template_name)
-    except ResourceNotFoundError as e:
-        if e.resource_type != "template":
-            raise
-        await client.create_template(name=template_name, image=template_image)
+    """Ensure the sandbox snapshot exists, creating it if needed."""
+    snapshots = await client.list_snapshots(name_contains=template_name)
+    for snapshot in snapshots:
+        if snapshot.name != template_name:
+            continue
+        if snapshot.status == "ready":
+            return
+        raise RuntimeError(
+            f"Sandbox snapshot '{template_name}' is not ready: {snapshot.status}"
+        )
+    await client.create_snapshot(
+        name=template_name,
+        docker_image=template_image,
+        fs_capacity_bytes=DEFAULT_TEMPLATE_FS_CAPACITY,
+    )

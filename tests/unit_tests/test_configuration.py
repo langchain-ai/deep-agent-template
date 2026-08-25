@@ -1,10 +1,10 @@
 from langgraph.pregel import Pregel
 
-from deep_agent.graph import SUBAGENTS, SYSTEM_PROMPT, graph
+from deep_agent.graph import RO_AGENT, SUBAGENTS, SYSTEM_PROMPT
 
 
 def test_graph_compiles() -> None:
-    assert isinstance(graph, Pregel)
+    assert isinstance(RO_AGENT, Pregel)
 
 
 def test_subagents_configured() -> None:
@@ -13,4 +13,4 @@ def test_subagents_configured() -> None:
 
 
 def test_system_prompt_is_nonempty() -> None:
-    assert len(SYSTEM_PROMPT.strip()) > 0
+    assert SYSTEM_PROMPT.strip()
