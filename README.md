@@ -20,7 +20,7 @@ Deployment template for a deep agent built with `create_deep_agent(...)`.
 1. Sync the project and configure environment:
 
 ```bash
-uv sync
+uv sync --upgrade
 cp .env.example .env
 ```
 
