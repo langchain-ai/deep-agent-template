@@ -8,12 +8,16 @@ Deployment template for a deep agent built with `create_deep_agent(...)`.
 - Explicit workflow prompt (plan, delegate, critique, finalize).
 - Two predefined sub-agents (`researcher`, `critic`).
 - Human-in-the-loop interrupts on `execute` and `write_file`.
+- A thread-scoped [LangSmith sandbox](https://docs.langchain.com/oss/python/deepagents/sandboxes)
+  backend, resolved by sandbox name (`thread-<thread_id>`) so runs on any deployment
+  instance reach the same sandbox.
 - A `uv`-managed local workflow with a small `Makefile` wrapper and starter tests.
 
 ## Prerequisites
 
 - An API key for your model provider (Anthropic by default)
 - A [LangSmith](https://smith.langchain.com/) account (Plus plan or higher) to deploy
+- `LANGSMITH_API_KEY` set, since the agent runs in a LangSmith sandbox
 
 ## Quickstart
 
@@ -56,3 +60,4 @@ Integration tests are skipped unless `ANTHROPIC_API_KEY` is set.
 - Deep Agents overview: https://docs.langchain.com/oss/python/deepagents/overview
 - Deep Agents quickstart: https://docs.langchain.com/oss/python/deepagents/quickstart
 - LangSmith CLI: https://docs.langchain.com/langsmith/cli
+- Sandboxes: https://docs.langchain.com/oss/python/deepagents/sandboxes

@@ -68,8 +68,7 @@ def _build_agent(backend=None):
         system_prompt=SYSTEM_PROMPT,
         subagents=SUBAGENTS,
         # You can disable these if you want to run without interrupts
-        interrupt_on={
-            "execute": True, "write_file": True},
+        interrupt_on={"execute": True, "write_file": True},
         name="deep_agent",
     )
 
@@ -79,10 +78,13 @@ RO_AGENT = _build_agent()
 
 @contextlib.asynccontextmanager
 async def get_agent(config: RunnableConfig, runtime: ServerRuntime):
-    ert = runtime.execution_runtime
-    if ert:
-        thread_id = config.get("configurable", {}).get("thread_id", "default")
-        backend = await get_or_create_sandbox(thread_id)
-        yield _build_agent(backend=backend)
-    else:
+    if not runtime.execution_runtime:
+        # Schema/graph introspection: no sandbox needed.
         yield RO_AGENT
+        return
+
+    thread_id = config.get("configurable", {}).get("thread_id")
+    if not thread_id:
+        raise ValueError("thread_id is required to resolve a thread-scoped sandbox.")
+    backend = await get_or_create_sandbox(thread_id)
+    yield _build_agent(backend=backend)
