@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import contextlib
 import os
-from datetime import datetime, timezone
-
-from langchain_core.runnables import RunnableConfig
+from datetime import UTC, datetime
 
 from deepagents import create_deep_agent
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph_sdk.runtime import ServerRuntime
 
@@ -35,7 +34,7 @@ Workflow:
 @tool
 def utc_now() -> str:
     """Return the current UTC timestamp in ISO format."""
-    return datetime.now(tz=timezone.utc).isoformat()
+    return datetime.now(tz=UTC).isoformat()
 
 
 SUBAGENTS = [
@@ -68,8 +67,7 @@ def _build_agent(backend=None):
         system_prompt=SYSTEM_PROMPT,
         subagents=SUBAGENTS,
         # You can disable these if you want to run without interrupts
-        interrupt_on={
-            "execute": True, "write_file": True},
+        interrupt_on={"execute": True, "write_file": True},
         name="deep_agent",
     )
 
